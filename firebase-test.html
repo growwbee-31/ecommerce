@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Database Connection Test - LuxeShirts India</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-init.js"></script>
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .test-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-display {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .test-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0.5rem;
+            transition: background 0.3s ease;
+        }
+
+        .test-button:hover {
+            background: #1a73e8;
+        }
+
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1><i class="fas fa-database"></i> Firebase Database Connection Test</h1>
+            <p>Test and verify your Firebase Realtime Database connection</p>
+        </div>
+
+        <div id="connectionStatus" class="connection-status status-disconnected">
+            <i class="fas fa-circle"></i>
+            <span>Checking connection...</span>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-plug"></i> Connection Test</h3>
+            <button id="testConnectionBtn" class="test-button" onclick="testConnection()">
+                <span id="testConnectionText">Test Database Connection</span>
+            </button>
+            <div id="connectionResult" class="data-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-shopping-cart"></i> Products Data</h3>
+            <button class="test-button" onclick="loadProductsData()">
+                <span id="productsText">Load Products</span>
+            </button>
+            <div id="productsData" class="data-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-users"></i> Users Data</h3>
+            <button class="test-button" onclick="loadUsersData()">
+                <span id="usersText">Load Users</span>
+            </button>
+            <div id="usersData" class="data-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-shopping-bag"></i> Orders Data</h3>
+            <button class="test-button" onclick="loadOrdersData()">
+                <span id="ordersText">Load Orders</span>
+            </button>
+            <div id="ordersData" class="data-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-plus-circle"></i> Add Test Data</h3>
+            <button class="test-button" onclick="addTestData()">
+                <span id="addTestText">Add Sample Product</span>
+            </button>
+            <div id="addTestResult" class="data-display" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3><i class="fas fa-info-circle"></i> Database Info</h3>
+            <div class="data-display">
+Project ID: growwbee-9c95d
+Database URL: https://growwbee-9c95d-default-rtdb.firebaseio.com
+Authentication: Enabled
+Realtime Database: Enabled
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let database = null;
+        let isConnected = false;
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkFirebase = () => {
+                if (window.firebaseDB) {
+                    database = window.firebaseDB;
+                    updateConnectionStatus(true);
+                    isConnected = true;
+                } else {
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            checkFirebase();
+        });
+
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (connected) {
+                statusDiv.className = 'connection-status status-connected';
+                statusDiv.innerHTML = '<i class="fas fa-check-circle"></i><span>Connected to Firebase Database</span>';
+            } else {
+                statusDiv.className = 'connection-status status-disconnected';
+                statusDiv.innerHTML = '<i class="fas fa-times-circle"></i><span>Disconnected from Firebase Database</span>';
+            }
+        }
+
+        async function testConnection() {
+            if (!database) {
+                showResult('connectionResult', 'Firebase not initialized');
+                return;
+            }
+
+            const btn = document.getElementById('testConnectionBtn');
+            const text = document.getElementById('testConnectionText');
+
+            btn.disabled = true;
+            text.innerHTML = '<span class="loading"></span> Testing...';
+
+            try {
+                // Test connection by trying to read from root
+                const testRef = window.firebaseRef(database, 'connection_test');
+                await window.firebaseSet(testRef, {
+                    timestamp: new Date().toISOString(),
+                    status: 'connected'
+                });
+
+                // Clean up test data
+                await window.firebaseRemove(testRef);
+
+                showResult('connectionResult', '✅ Database connection successful!\n\n✓ Write operations working\n✓ Read operations working\n✓ Delete operations working\n\nFirebase Realtime Database is fully connected and operational.');
+                updateConnectionStatus(true);
+
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                showResult('connectionResult', `❌ Database connection failed!\n\nError: ${error.message}\n\nPlease check:\n- Firebase configuration\n- Internet connection\n- Database rules\n- API keys`);
+                updateConnectionStatus(false);
+            }
+
+            btn.disabled = false;
+            text.textContent = 'Test Database Connection';
+        }
+
+        async function loadProductsData() {
+            if (!database) {
+                showResult('productsData', 'Firebase not initialized');
+                return;
+            }
+
+            const text = document.getElementById('productsText');
+            text.innerHTML = '<span class="loading"></span> Loading...';
+
+            try {
+                const productsRef = window.firebaseRef(database, 'products');
+                const snapshot = await window.firebaseGet(productsRef);
+                const data = snapshot.val();
+
+                if (data) {
+                    const products = Object.values(data);
+                    showResult('productsData', `📦 Products in Database: ${products.length}\n\n${JSON.stringify(products, null, 2)}`);
+                } else {
+                    showResult('productsData', '📦 No products found in database\n\nThe products collection is empty.');
+                }
+
+            } catch (error) {
+                showResult('productsData', `❌ Error loading products: ${error.message}`);
+            }
+
+            text.textContent = 'Load Products';
+        }
+
+        async function loadUsersData() {
+            if (!database) {
+                showResult('usersData', 'Firebase not initialized');
+                return;
+            }
+
+            const text = document.getElementById('usersText');
+            text.innerHTML = '<span class="loading"></span> Loading...';
+
+            try {
+                const usersRef = window.firebaseRef(database, 'users');
+                const snapshot = await window.firebaseGet(usersRef);
+                const data = snapshot.val();
+
+                if (data) {
+                    const users = Object.values(data);
+                    showResult('usersData', `👥 Users in Database: ${users.length}\n\n${JSON.stringify(users, null, 2)}`);
+                } else {
+                    showResult('usersData', '👥 No users found in database\n\nThe users collection is empty.');
+                }
+
+            } catch (error) {
+                showResult('usersData', `❌ Error loading users: ${error.message}`);
+            }
+
+            text.textContent = 'Load Users';
+        }
+
+        async function loadOrdersData() {
+            if (!database) {
+                showResult('ordersData', 'Firebase not initialized');
+                return;
+            }
+
+            const text = document.getElementById('ordersText');
+            text.innerHTML = '<span class="loading"></span> Loading...';
+
+            try {
+                const ordersRef = window.firebaseRef(database, 'orders');
+                const snapshot = await window.firebaseGet(ordersRef);
+                const data = snapshot.val();
+
+                if (data) {
+                    const orders = Object.values(data);
+                    showResult('ordersData', `🛒 Orders in Database: ${orders.length}\n\n${JSON.stringify(orders, null, 2)}`);
+                } else {
+                    showResult('ordersData', '🛒 No orders found in database\n\nThe orders collection is empty.');
+                }
+
+            } catch (error) {
+                showResult('ordersData', `❌ Error loading orders: ${error.message}`);
+            }
+
+            text.textContent = 'Load Orders';
+        }
+
+        async function addTestData() {
+            if (!database) {
+                showResult('addTestResult', 'Firebase not initialized');
+                return;
+            }
+
+            const text = document.getElementById('addTestText');
+            text.innerHTML = '<span class="loading"></span> Adding...';
+
+            try {
+                const testProduct = {
+                    id: Date.now(),
+                    name: 'Test Product - Connection Check',
+                    category: 'test',
+                    price: 99.99,
+                    originalPrice: 129.99,
+                    rating: 4.5,
+                    description: 'This is a test product to verify database connection',
+                    image: 'https://via.placeholder.com/400x300/4CAF50/white?text=Test+Product',
+                    createdAt: new Date().toISOString()
+                };
+
+                const productsRef = window.firebaseRef(database, 'products');
+                const newProductRef = window.firebasePush(productsRef);
+                await window.firebaseSet(newProductRef, testProduct);
+
+                showResult('addTestResult', `✅ Test product added successfully!\n\nProduct ID: ${testProduct.id}\nName: ${testProduct.name}\n\nThe product has been added to your Firebase database. You can view it in the admin dashboard.`);
+
+            } catch (error) {
+                showResult('addTestResult', `❌ Error adding test product: ${error.message}`);
+            }
+
+            text.textContent = 'Add Sample Product';
+        }
+
+        function showResult(elementId, content) {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

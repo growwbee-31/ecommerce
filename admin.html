@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - LuxeShirts India</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <div class="admin-header">
+            <div>
+                <h1>Admin Dashboard - लक्सशर्ट्स इंडिया</h1>
+                <p>आपके स्टोर के डेटा और प्रबंधन उपकरणों का पूरा अवलोकन।</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <a href="firebase-test.html" style="background: #17a2b8; color: white; padding: 0.5rem 1rem; border-radius: 6px; text-decoration: none;">
+                    <i class="fas fa-database"></i> Test DB
+                </a>
+                <button onclick="adminLogout()" style="background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+                <a href="index.html"><i class="fas fa-arrow-left"></i> वापस स्टोर पर जाएं</a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalProducts">0</h3>
+                    <p>कुल उत्पाद</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalUsers">0</h3>
+                    <p>पंजीकृत ग्राहक</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalOrders">0</h3>
+                    <p>कुल ऑर्डर</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalRevenue">₹0</h3>
+                    <p>कुल राजस्व</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="showTab('products')">उत्पाद</button>
+            <button class="tab-btn" onclick="showTab('users')">ग्राहक</button>
+            <button class="tab-btn" onclick="showTab('orders')">ऑर्डर</button>
+            <button class="tab-btn" onclick="showTab('analytics')">विश्लेषण</button>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="productsTab" class="tab-content active">
+            <div class="admin-card">
+                <h2>नया उत्पाद जोड़ें</h2>
+                <form id="productForm">
+                    <div class="admin-form-grid">
+                        <div class="form-group">
+                            <label for="productName">उत्पाद का नाम</label>
+                            <input id="productName" type="text" required placeholder="उत्पाद का नाम दर्ज करें">
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">श्रेणी</label>
+                            <select id="productCategory" required>
+                                <option value="casual">कैजुअल</option>
+                                <option value="formal">फॉर्मल</option>
+                                <option value="sports">स्पोर्ट्स</option>
+                                <option value="premium">प्रीमियम</option>
+                                <option value="ethnic">एथनिक</option>
+                                <option value="traditional">पारंपरिक</option>
+                                <option value="other">अन्य</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">कीमत (INR)</label>
+                            <input id="productPrice" type="number" min="0" step="0.01" required placeholder="1999">
+                        </div>
+                        <div class="form-group">
+                            <label for="productOriginalPrice">मूल कीमत (INR)</label>
+                            <input id="productOriginalPrice" type="number" min="0" step="0.01" placeholder="2999">
+                        </div>
+                        <div class="form-group">
+                            <label for="productRating">रेटिंग</label>
+                            <input id="productRating" type="number" min="0" max="5" step="0.1" value="4.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productImageUrl">छवि URL</label>
+                            <input id="productImageUrl" type="url" placeholder="https://example.com/image.jpg">
+                        </div>
+                        <div class="form-group">
+                            <label for="productImageFile">छवि अपलोड करें</label>
+                            <input id="productImageFile" type="file" accept="image/*">
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="productDescription">विवरण</label>
+                            <textarea id="productDescription" rows="4" required placeholder="संक्षिप्त विवरण दर्ज करें"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="admin-actions">
+                        <button type="submit"><i class="fas fa-plus-circle"></i> उत्पाद जोड़ें</button>
+                    </div>
+                </form>
+
+                <img id="productImagePreview" alt="Product preview" src="https://via.placeholder.com/600x400/eeeeee/555?text=छवि+पूर्वावलोकन">
+                <div id="adminMessage" class="admin-message" style="display:none;"></div>
+            </div>
+
+            <div class="admin-card">
+                <h2>मौजूदा उत्पाद</h2>
+                <div class="table-responsive">
+                    <table class="admin-products-table" id="productTable">
+                        <thead>
+                            <tr>
+                                <th>छवि</th>
+                                <th>नाम</th>
+                                <th>श्रेणी</th>
+                                <th>कीमत</th>
+                                <th>रेटिंग</th>
+                                <th>कार्रवाई</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="6">उत्पाद लोड हो रहे हैं...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="usersTab" class="tab-content">
+            <div class="admin-card">
+                <h2>पंजीकृत ग्राहक</h2>
+                <div class="table-responsive">
+                    <table class="admin-users-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>नाम</th>
+                                <th>ईमेल</th>
+                                <th>पंजीकरण तारीख</th>
+                                <th>अंतिम लॉगिन</th>
+                                <th>कार्रवाई</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5">ग्राहक लोड हो रहे हैं...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="ordersTab" class="tab-content">
+            <div class="admin-card">
+                <h2>ऑर्डर इतिहास</h2>
+                <div class="table-responsive">
+                    <table class="admin-orders-table" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>ऑर्डर ID</th>
+                                <th>ग्राहक</th>
+                                <th>आइटम</th>
+                                <th>कुल</th>
+                                <th>स्थिति</th>
+                                <th>तारीख</th>
+                                <th>कार्रवाई</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="7">ऑर्डर लोड हो रहे हैं...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analyticsTab" class="tab-content">
+            <div class="admin-card">
+                <h2>स्टोर विश्लेषण</h2>
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <h3>श्रेणीवार राजस्व</h3>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="analytics-item">
+                        <h3>मासिक ऑर्डर</h3>
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                    <div class="analytics-item">
+                        <h3>शीर्ष उत्पाद</h3>
+                        <div id="topProductsList"></div>
+                    </div>
+                    <div class="analytics-item">
+                        <h3>हाल की गतिविधि</h3>
+                        <div id="recentActivity"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ग्राहक विवरण</h2>
+                <span class="close-modal" onclick="closeModal('userModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="userModalBody">
+                <!-- User details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>ऑर्डर विवरण</h2>
+                <span class="close-modal" onclick="closeModal('orderModal')">&times;</span>
+            </div>
+            <div class="modal-body" id="orderModalBody">
+                <!-- Order details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

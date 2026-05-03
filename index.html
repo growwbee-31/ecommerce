@@ -1,51 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase Auth Login / Register</title>
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxeShirts India - Premium Shirt Collection</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-init.js"></script>
 </head>
 <body>
-  <div class="container">
-    <div class="card auth-card">
-      <h1>Firebase Auth</h1>
-      <div class="tabs">
-        <button id="show-register" class="tab active">Register</button>
-        <button id="show-login" class="tab">Login</button>
-      </div>
-
-      <form id="register-form" class="form active">
-        <div class="field">
-          <label for="register-email">Email</label>
-          <input id="register-email" type="email" placeholder="Email" required />
+    <!-- Side Navbar -->
+    <div class="side-navbar" id="sideNavbar">
+        <div class="sidebar-header">
+            <span class="close-btn" onclick="toggleSideNavbar()">&times;</span>
+            <h2>Menu</h2>
         </div>
-        <div class="field">
-          <label for="register-password">Password</label>
-          <input id="register-password" type="password" placeholder="Password" required minlength="6" />
-        </div>
-        <button type="submit" class="btn">Register</button>
-      </form>
-
-      <form id="login-form" class="form">
-        <div class="field">
-          <label for="login-email">Email</label>
-          <input id="login-email" type="email" placeholder="Email" required />
-        </div>
-        <div class="field">
-          <label for="login-password">Password</label>
-          <input id="login-password" type="password" placeholder="Password" required />
-        </div>
-        <button type="submit" class="btn">Login</button>
-      </form>
-
-      <div class="status" id="status"></div>
-      <button id="logout-btn" class="btn logout">Logout</button>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link">Home</a>
+            <a href="#" class="sidebar-link" onclick="filterCategory('all')">All Products</a>
+            <a href="#" class="sidebar-link" onclick="filterCategory('casual')">Casual Shirts</a>
+            <a href="#" class="sidebar-link" onclick="filterCategory('formal')">Formal Shirts</a>
+            <a href="#" class="sidebar-link" onclick="filterCategory('sports')">Sports Shirts</a>
+            <a href="#" class="sidebar-link" onclick="filterCategory('premium')">Premium Collection</a>
+            <a href="#" class="sidebar-link">About Us</a>
+            <a href="#" class="sidebar-link">Contact</a>
+            <a href="admin.html" class="sidebar-link admin-link" id="sidebarAdminLink" style="display: none;">Admin Dashboard</a>
+        </nav>
     </div>
-  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="app.js"></script>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <button class="menu-btn" onclick="toggleSideNavbar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-crown"></i> LuxeShirts India
+                </div>
+            </div>
+            
+            <div class="navbar-center">
+                <input type="text" class="search-bar" placeholder="Search for shirts...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+
+            <div class="navbar-right">
+                <a href="admin.html" class="admin-btn" id="navbarAdminBtn" style="display: none;">
+                    <i class="fas fa-tachometer-alt"></i> Admin
+                </a>
+                <a href="login.html" class="login-btn" id="loginBtn">
+                    <i class="fas fa-user"></i> Login
+                </a>
+                <a href="cart.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Elevate Your Style</h1>
+            <p>Discover Premium Quality Shirts for Every Occasion</p>
+            <button class="hero-btn" onclick="scrollToProducts()">Shop Now</button>
+        </div>
+        <div class="hero-image">
+            <img src="https://via.placeholder.com/600x400/2c3e50/ffffff?text=Premium+Shirts" alt="Hero Banner">
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="category-section">
+        <h2>Shop By Category</h2>
+        <div class="category-buttons">
+            <button class="category-btn active" onclick="filterCategory('all')">All</button>
+            <button class="category-btn" onclick="filterCategory('casual')">Casual</button>
+            <button class="category-btn" onclick="filterCategory('formal')">Formal</button>
+            <button class="category-btn" onclick="filterCategory('sports')">Sports</button>
+            <button class="category-btn" onclick="filterCategory('premium')">Premium</button>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section" id="productsSection">
+        <h2>Featured Collection</h2>
+        <div class="products-grid" id="productsGrid">
+            <!-- Products will be inserted here by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About LuxeShirts</h3>
+                <p>Premium quality shirts crafted with excellence for the modern gentleman.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Shop</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Customer Service</h3>
+                <ul>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 LuxeShirts. All rights reserved. | Privacy Policy | Terms & Conditions</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>

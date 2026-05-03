@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - LuxeShirts India</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-init.js"></script>
+    <style>
+        .cart-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 1rem;
+        }
+
+        .cart-header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        .back-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            gap: 1rem;
+        }
+
+        .cart-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .cart-items {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+
+        .empty-cart p {
+            color: #999;
+            margin-bottom: 2rem;
+        }
+
+        .empty-cart a {
+            color: white;
+            text-decoration: none;
+            background: var(--primary-color);
+            padding: 0.8rem 2rem;
+            border-radius: 4px;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .empty-cart a:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 120px 1fr 100px;
+            gap: 1.5rem;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .cart-item:hover {
+            background: var(--light-bg);
+        }
+
+        .cart-item-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: var(--light-bg);
+        }
+
+        .cart-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cart-item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .cart-item-category {
+            color: var(--secondary-color);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .cart-item-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .qty-btn {
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--secondary-color);
+            background: white;
+            color: var(--primary-color);
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .qty-btn:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .qty-input {
+            width: 50px;
+            text-align: center;
+            border: 2px solid #ddd;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .remove-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .remove-btn:hover {
+            background: #c0392b;
+            transform: translateX(-3px);
+        }
+
+        /* Cart Summary Sidebar */
+        .cart-summary {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+
+        .summary-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 1rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .summary-row.total {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            border-top: 2px solid var(--border-color);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .summary-row.discount {
+            color: #27ae60;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2rem;
+        }
+
+        .checkout-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .coupon-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .coupon-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .coupon-input {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .apply-coupon {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .apply-coupon:hover {
+            background: #e5c158;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2c2c2c 100%);
+            color: var(--accent-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            min-width: 200px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--secondary-color);
+            text-transform: uppercase;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            min-width: 200px;
+            justify-content: flex-end;
+        }
+
+        .login-btn {
+            color: var(--accent-color);
+            text-decoration: none;
+            padding: 0.6rem 1.2rem;
+            border: 2px solid var(--secondary-color);
+            border-radius: 4px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .cart-icon {
+            position: relative;
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-summary {
+                position: static;
+            }
+
+            .cart-item {
+                grid-template-columns: 100px 1fr;
+                gap: 1rem;
+            }
+
+            .cart-item-image {
+                width: 100px;
+                height: 100px;
+            }
+
+            .remove-btn {
+                width: 100%;
+                margin-top: 0.5rem;
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .cart-container {
+                padding: 1rem;
+            }
+
+            .cart-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .cart-item {
+                grid-template-columns: 80px 1fr;
+                gap: 1rem;
+            }
+
+            .cart-item-image {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-left">
+                <div class="logo">
+                    <i class="fas fa-crown"></i> LuxeShirts India
+                </div>
+            </div>
+
+            <div class="navbar-right">
+                <a href="login.html" class="login-btn">
+                    <i class="fas fa-user"></i> Login
+                </a>
+                <a href="cart.html" class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="cart-container">
+        <div class="cart-header">
+            <h1>Shopping Cart</h1>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Continue Shopping
+            </a>
+        </div>
+
+        <div class="cart-content">
+            <div class="cart-items" id="cartItemsContainer">
+                <!-- Cart items will be inserted here -->
+            </div>
+
+            <div class="cart-summary">
+                <div class="summary-title">Order Summary</div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping:</span>
+                    <span id="shipping">$10.00</span>
+                </div>
+                <div class="summary-row discount">
+                    <span>Discount:</span>
+                    <span id="discount">-$0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span id="total">$0.00</span>
+                </div>
+
+                <div class="coupon-section">
+                    <label class="coupon-label">Have a coupon code?</label>
+                    <input type="text" class="coupon-input" id="couponInput" placeholder="Enter code">
+                    <button class="apply-coupon" onclick="applyCoupon()">Apply Coupon</button>
+                </div>
+
+                <a href="checkout.html" class="checkout-btn">Proceed to Checkout</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        const SHIPPING_COST = 100;
+        let discountPercent = 0;
+        let auth = null;
+        let database = null;
+        let currentUser = null;
+
+        // Initialize Firebase and load cart
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkFirebase = () => {
+                if (window.firebaseAuth && window.firebaseDB) {
+                    auth = window.firebaseAuth;
+                    database = window.firebaseDB;
+
+                    // Listen for auth state changes
+                    window.firebaseOnAuthStateChanged(auth, (user) => {
+                        currentUser = user;
+                        loadCart();
+                        renderCartItems();
+                        updateCartCount();
+                    });
+                } else {
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            checkFirebase();
+        });
+
+        // Load cart from Firebase or localStorage
+        async function loadCart() {
+            try {
+                if (currentUser && database) {
+                    // Load from Firebase
+                    const cartRef = window.firebaseRef(database, `carts/${currentUser.uid}`);
+                    const snapshot = await window.firebaseGet(cartRef);
+
+                    if (snapshot.exists()) {
+                        cart = snapshot.val() || [];
+                        console.log('Cart loaded from Firebase:', cart);
+                    } else {
+                        // No Firebase cart, try localStorage
+                        const savedCart = localStorage.getItem('cart');
+                        if (savedCart) {
+                            cart = JSON.parse(savedCart);
+                            // Migrate to Firebase
+                            await saveCartToFirebase();
+                        }
+                    }
+                } else {
+                    // Not logged in, use localStorage
+                    const savedCart = localStorage.getItem('cart');
+                    if (savedCart) {
+                        cart = JSON.parse(savedCart);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading cart:', error);
+                // Fallback to localStorage
+                const savedCart = localStorage.getItem('cart');
+                if (savedCart) {
+                    cart = JSON.parse(savedCart);
+                }
+            }
+        }
+
+        // Save cart to Firebase and localStorage
+        async function saveCart() {
+            try {
+                if (currentUser && database) {
+                    await saveCartToFirebase();
+                }
+                // Always save to localStorage as backup
+                localStorage.setItem('cart', JSON.stringify(cart));
+            } catch (error) {
+                console.error('Error saving cart:', error);
+                // Fallback to localStorage
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+        }
+
+        // Save cart to Firebase
+        async function saveCartToFirebase() {
+            if (currentUser && database) {
+                const cartRef = window.firebaseRef(database, `carts/${currentUser.uid}`);
+                await window.firebaseSet(cartRef, cart);
+                console.log('Cart saved to Firebase');
+            }
+        }
+
+        // Render cart items
+        function renderCartItems() {
+            const container = document.getElementById('cartItemsContainer');
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Your cart is empty</p>
+                        <a href="index.html">Start Shopping</a>
+                    </div>
+                `;
+                updateSummary();
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <img src="${item.image}" alt="${item.name}">
+                    </div>
+                    <div class="cart-item-details">
+                        <div class="cart-item-category">${item.category}</div>
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">₹${(item.price * 83.5).toFixed(0)}</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div class="quantity-control">
+                            <button class="qty-btn" onclick="decreaseQuantity(${item.id})">−</button>
+                            <input type="text" class="qty-input" value="${item.quantity || 1}" readonly>
+                            <button class="qty-btn" onclick="increaseQuantity(${item.id})">+</button>
+                        </div>
+                        <button class="remove-btn" onclick="removeFromCart(${item.id})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        // Increase quantity
+        function increaseQuantity(productId) {
+            const item = cart.find(p => p.id === productId);
+            if (item) {
+                item.quantity = (item.quantity || 1) + 1;
+                saveCart();
+                renderCartItems();
+            }
+        }
+
+        // Decrease quantity
+        function decreaseQuantity(productId) {
+            const item = cart.find(p => p.id === productId);
+            if (item && (item.quantity || 1) > 1) {
+                item.quantity = (item.quantity || 1) - 1;
+                saveCart();
+                renderCartItems();
+            }
+        }
+
+        // Remove from cart
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            renderCartItems();
+            updateCartCount();
+        }
+
+        // Update summary
+        function updateSummary() {
+            let subtotal = 0;
+            cart.forEach(item => {
+                subtotal += item.price * (item.quantity || 1);
+            });
+
+            // Convert to INR (approximate rate)
+            subtotal = subtotal * 83.5;
+            const discount = subtotal * (discountPercent / 100);
+            const total = subtotal + SHIPPING_COST - discount;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(0)}`;
+            document.getElementById('shipping').textContent = `₹${SHIPPING_COST}`;
+            document.getElementById('discount').textContent = `-₹${discount.toFixed(0)}`;
+            document.getElementById('total').textContent = `₹${Math.max(total, 0).toFixed(0)}`;
+
+            // Save totals to localStorage
+            localStorage.setItem('cartTotal', Math.max(total, 0).toFixed(0));
+        }
+
+        // Apply coupon
+        function applyCoupon() {
+            const couponCode = document.getElementById('couponInput').value.toUpperCase();
+
+            // Sample coupon codes
+            const coupons = {
+                'SAVE10': 10,
+                'SAVE20': 20,
+                'LUXURY': 15
+            };
+
+            if (coupons[couponCode]) {
+                discountPercent = coupons[couponCode];
+                showSuccessMessage(`Coupon applied! ${discountPercent}% discount`);
+                updateSummary();
+            } else {
+                showErrorMessage('Invalid coupon code');
+            }
+        }
+
+        // Update cart count
+        function updateCartCount() {
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                cartCount.textContent = cart.length;
+            }
+        }
+
+        function showSuccessMessage(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: #27ae60;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 4px;
+                z-index: 2000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+
+        function showErrorMessage(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: #e74c3c;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 4px;
+                z-index: 2000;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
